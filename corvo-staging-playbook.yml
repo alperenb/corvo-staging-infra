@@ -1,0 +1,36 @@
+---
+## This playbook deploys the whole application stack in this site.
+
+# Apply common configuration to all hosts except proxmox.
+- hosts: all:!proxmox
+  gather_facts: false
+  roles:
+    - common
+  tags:
+    - common
+
+# Configure Redis key-value storage for Spring Session.
+- hosts: redis_master
+  roles:
+    - role: redis
+      sentinel:
+        enabled: yes
+        master: 
+          ip: "{{ hostvars[inventory_hostname]['master'] }}"
+          port: "{{ hostvars[groups['redis'][0]]['port'] }}"
+        quorum: 2
+  tags:
+    - redis
+
+- hosts: redis_replica
+  roles:
+    - role: redis
+      slaveof: "{{ hostvars[inventory_hostname]['master'] }} 6379"
+      sentinel:
+        enabled: yes
+        master:
+          ip: "{{ hostvars[inventory_hostname]['master'] }}"
+          port: "{{ hostvars[groups['redis'][0]]['port'] }}"
+        quorum: 2
+  tags:
+    - redis

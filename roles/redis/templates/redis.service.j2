@@ -1,0 +1,14 @@
+[Unit]
+Description=Redis In-Memory Data Store
+After=network.target
+
+[Service]
+Type={{ 'forking' if redis_daemonize == 'yes' else 'simple' }}
+ExecStart={{ redis_install_dir }}/bin/redis-server /etc/redis/{{ redis_port }}.conf
+PIDFile={{ redis_pidfile }}
+Restart=always
+User={{ redis_user }}
+Group={{ redis_group }}
+
+[Install]
+WantedBy=multi-user.target

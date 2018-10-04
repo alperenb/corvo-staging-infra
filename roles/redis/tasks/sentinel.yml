@@ -1,0 +1,60 @@
+---
+- name: create sentinel working directory
+  file:
+    path: "{{ redis_sentinel_dir }}"
+    state: directory
+    recurse: yes
+    owner: "{{ redis_user }}"
+  become: true
+
+- name: create sentinel systemd service
+  template:
+    src: redis_sentinel.service.j2
+    dest: /etc/systemd/system/sentinel_{{ redis_sentinel_port }}.service
+    mode: 0644
+  become: true
+
+- name: set sentinel to start at boot
+  service:
+    name: sentinel_{{ redis_sentinel_port }}
+    enabled: yes
+  become: true
+
+- name: check if sentinel pid directory exists
+  stat:
+    path: "{{ redis_sentinel_pidfile|dirname }}"
+  register: sentinel_piddir
+  changed_when: false
+  when: redis_sentinel_pidfile != '""'
+  become: true
+
+- name: create sentinel pid directory if it does not exist
+  file:
+    state: directory
+    path: "{{ redis_sentinel_pidfile|dirname }}"
+    owner: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+  when:
+    - redis_sentinel_pidfile != '""'
+    - not sentinel_piddir.stat.exists
+  become: true
+
+- name: Configure slavery
+  set_fact:
+    slaveof: "{{ hostvars[inventory_hostname]['master'] }} 6379"
+  when: hostvars[inventory_hostname]['master'] == "yes"  
+
+- name: create sentinel config file
+  template:
+    src: redis_sentinel.conf.j2
+    dest: /etc/redis/sentinel_{{ redis_sentinel_port }}.conf
+    owner: "{{ redis_user }}"
+    mode: 0640
+  notify: "restart sentinel {{ redis_sentinel_port }}"
+  become: true  
+
+- name: Ensure sentinel is running
+  service:
+    name: sentinel_{{ redis_sentinel_port }}
+    state: started
+  become: true

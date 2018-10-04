@@ -1,0 +1,6 @@
+- include_tasks: check-python2.yml
+# Gather facts
+- name: Reload ansible_facts
+  setup:
+- include_tasks: set-hostname.yml
+- include_tasks: update-apt-cache.yml

@@ -1,0 +1,71 @@
+---
+- name: Compile Redis
+  command: make -j{{ ansible_processor_cores|default(1) + 1 }}
+  args:
+    chdir: /usr/local/src/redis-{{ redis_version }}
+    creates: /usr/local/src/redis-{{ redis_version }}/src/redis-server
+  become: yes
+
+- name: Create Redis install directory
+  file:
+    path: "{{ redis_install_dir }}"
+    state: directory
+  become: yes
+
+- name: Create /etc/redis
+  file:
+    path: /etc/redis
+    state: directory
+  become: yes
+
+- name: Check if Redis user exists (ignore errors).
+  command: id {{ redis_user }}
+  ignore_errors: yes
+  changed_when: false
+  register: user_exists
+
+- name: Add Redis group.
+  group:
+    name: "{{ redis_group }}"
+    state: present
+  when: user_exists|failed
+  become: yes
+
+- name: Add Redis user.
+  user:
+    name: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+    comment: "Redis"
+    home: "{{ redis_install_dir }}"
+    shell: /bin/false
+    system: yes
+  when: user_exists|failed
+  become: yes
+
+- name: Create /var/run/redis
+  file:
+    path: /var/run/redis
+    state: directory
+    owner: "{{ redis_user }}"
+  become: yes
+
+- name: Install Redis.
+  command: make PREFIX={{ redis_install_dir }} install
+  args:
+    chdir: /usr/local/src/redis-{{ redis_version }}
+    creates: "{{ redis_install_dir }}/bin/redis-server"
+  become: yes
+
+- name: List Redis binaries to add to alternatives.
+  command: ls -1 {{ redis_install_dir }}/bin
+  register: redis_binaries
+  changed_when: false
+  become: yes
+
+- name: Add Redis binaries to alternatives.
+  alternatives:
+    name: "{{ item }}"
+    path: "{{ redis_install_dir }}/bin/{{ item }}"
+    link: "/usr/bin/{{ item }}"
+  with_items: "{{ redis_binaries.stdout_lines }}"
+  become: yes

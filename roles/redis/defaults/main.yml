@@ -1,0 +1,43 @@
+redis_version: 4.0.8
+redis_install_dir: /opt/redis
+redis_dir: /var/lib/redis/{{ redis_port }}
+redis_download_url: "http://download.redis.io/releases/redis-{{ redis_version }}.tar.gz"
+
+redis_user: redis
+redis_group: "{{ redis_user }}"
+
+# Service name
+redis_service_name: "redis_{{ redis_port }}"
+
+## Networking/connection options
+redis_bind: 0.0.0.0
+redis_port: 6379
+redis_password: false
+
+redis_pidfile: /var/run/redis/{{ redis_port }}.pid
+
+# Designed for >= Ubuntu 16.04 
+supervised_option: systemd
+redis_daemonize: "no"
+
+# Logging options
+redis_loglevel: notice
+redis_logfile: '""'
+redis_syslog_enabled: "yes"
+redis_syslog_ident: "{{ redis_service_name }}"
+
+# How frequently to snapshot the database to disk
+# e.g. "900 1" => 900 seconds if at least 1 key changed
+redis_save:
+  - 900 1
+  - 300 10
+  - 60 10000
+
+# the file name for the RDB Backup
+redis_db_filename: "dump.rdb"
+
+redis_sentinel_bind: 0.0.0.0
+redis_sentinel_port: 26379
+redis_sentinel_dir: /var/lib/redis/sentinel_{{ redis_sentinel_port }}
+redis_sentinel_pidfile: /var/run/redis/sentinel_{{ redis_sentinel_port }}.pid
+redis_sentinel_syslog_ident: sentinel_{{ redis_sentinel_port }}

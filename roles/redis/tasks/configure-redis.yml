@@ -1,0 +1,85 @@
+---
+- name: Create redis working directory.
+  file:
+    path: "{{ redis_dir }}"
+    state: directory
+    recurse: yes
+    owner: "{{ redis_user }}"
+  become: yes
+
+- name: Create Redis systemd service
+  template:
+    src: redis.service.j2
+    dest: /etc/systemd/system/{{ redis_service_name }}.service
+    mode: 0644
+  register: redis_unit_file
+  become: yes
+
+- name: Reload systemd daemon.
+  command: systemctl daemon-reload
+  when:
+    - redis_unit_file|changed
+  become: yes
+
+- name: Set Redis to start at boot.
+  service:
+    name: "{{ redis_service_name }}"
+    enabled: yes
+  become: yes
+
+- name: check if pid directory exists
+  stat:
+    path: "{{ redis_pidfile|dirname }}"
+  register: piddir
+  changed_when: false
+  when: redis_pidfile != '""'
+
+- name: create pid directory if it does not exist
+  file:
+    state: directory
+    path: "{{ redis_pidfile|dirname }}"
+    owner: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+  when:
+    - redis_pidfile != '""'
+    - not piddir.stat.exists
+
+# Configure slavery
+# - block: 
+  # - name: Set master
+  #   set_fact:
+  #     redis_master: "{{ hostvars[inventory_hostname]['master'] }}"
+  #   when: hostvars[inventory_hostname]['master'] is defined
+  
+  # - name: Print the first fact
+  #   debug:
+  #     var: redis_master
+  
+  # - name: Configure slavery
+  #   set_fact:
+  #     slaveof: "{{ hostvars[inventory_hostname]['master'] }} 6379"
+  #   when: hostvars[inventory_hostname]['master'] == "redis_replica"
+
+  # - name: Print the second fact
+  #   debug:
+  #     var: slaveof
+
+- name: Create redis config file.
+  template:
+    src: redis.conf.j2
+    dest: /etc/redis/{{ redis_port }}.conf
+    owner: "{{ redis_user }}"
+    mode: 0640
+  notify: "restart redis {{ redis_port }}"
+  become: yes
+
+# Flush handlers before ensuring the service is started to prevent
+# a start and then restart
+- name: flush handlers to apply config changes
+  meta: flush_handlers
+
+- name: Ensure Redis is running.
+  service:
+    name: "{{ redis_service_name }}"
+    state: started
+  become: yes

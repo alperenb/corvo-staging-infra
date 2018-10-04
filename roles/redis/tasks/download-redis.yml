@@ -1,0 +1,12 @@
+---
+- name: Download latest stable Redis.
+  get_url: 
+    url: "{{ redis_download_url }}"
+    dest: "/tmp/redis-{{ redis_version }}.tar.gz"
+- name: Extract redis tarball
+  unarchive:
+    src: "/tmp/redis-{{ redis_version }}.tar.gz"
+    dest: /usr/local/src
+    creates: /usr/local/src/redis-{{ redis_version }}/Makefile
+    remote_src: yes
+  become: yes

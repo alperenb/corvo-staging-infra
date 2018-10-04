@@ -1,0 +1,9 @@
+# Check Ubuntu release version to determine if we need to install python 2,
+# an Ansible dependency that isn't included by default in Ubuntu 16.04 and up.  
+- name: Installing python2 for Ansible
+  # raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python-minimal)"
+  raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+  register: output
+  changed_when: output.stdout != ""
+  become: yes
+  

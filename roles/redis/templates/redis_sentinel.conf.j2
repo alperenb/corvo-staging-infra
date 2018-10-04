@@ -1,0 +1,18 @@
+# redis-sentinel {{ redis_version }} configuration file
+# sentinel_{{ redis_sentinel_port }}.conf
+
+daemonize {{ redis_daemonize }}
+dir {{ redis_sentinel_dir }}
+pidfile {{ redis_sentinel_pidfile }}
+port {{ redis_sentinel_port }}
+bind {{ redis_sentinel_bind }}
+
+{% if sentinel.master is defined -%}
+sentinel monitor mymaster {{ sentinel.master.ip }} {{ sentinel.master.port }} {{ sentinel.quorum }}
+sentinel down-after-milliseconds mymaster 60000
+sentinel failover-timeout mymaster 180000
+sentinel parallel-syncs mymaster 1
+{% endif -%}
+
+syslog-enabled {{ redis_syslog_enabled }}
+syslog-ident {{ redis_sentinel_syslog_ident }}
