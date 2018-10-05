@@ -47,7 +47,7 @@
 - name: Configure slavery
   set_fact:
     slaveof: "{{ hostvars[groups['redis_master'][0]]['ansible_default_ipv4']['address'] }} {{ hostvars[groups['redis_master'][0]]['port'] }}"
-  when: inventory_hostname != "master"
+  when: inventory_hostname != "redis_master"
 
 - name: Show slaveof variable.
   debug:
