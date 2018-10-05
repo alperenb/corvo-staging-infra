@@ -39,11 +39,6 @@
     - not sentinel_piddir.stat.exists
   become: true
 
-- name: Configure slavery
-  set_fact:
-    slaveof: "{{ hostvars[inventory_hostname]['master'] }} 6379"
-  when: hostvars[inventory_hostname]['master'] == "yes"  
-
 - name: create sentinel config file
   template:
     src: redis_sentinel.conf.j2
@@ -51,7 +46,7 @@
     owner: "{{ redis_user }}"
     mode: 0640
   notify: "restart sentinel {{ redis_sentinel_port }}"
-  become: true  
+  become: true
 
 - name: Ensure sentinel is running
   service:

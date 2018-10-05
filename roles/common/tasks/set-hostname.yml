@@ -5,8 +5,10 @@
     line: "{{ hostvars[inventory_hostname].ansible_default_ipv4.address }} {{ hostvars[inventory_hostname]['hostname'] }}"
     state: present
   become: yes
+  when: hostvars[inventory_hostname]['hostname'] is defined
 
 - name: Set hostname
   hostname:
     name: "{{ hostvars[inventory_hostname]['hostname'] }}"
   become: yes
+  when: hostvars[inventory_hostname]['hostname'] is defined

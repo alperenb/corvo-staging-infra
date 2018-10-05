@@ -44,25 +44,14 @@
     - redis_pidfile != '""'
     - not piddir.stat.exists
 
-# Configure slavery
-# - block: 
-  # - name: Set master
-  #   set_fact:
-  #     redis_master: "{{ hostvars[inventory_hostname]['master'] }}"
-  #   when: hostvars[inventory_hostname]['master'] is defined
-  
-  # - name: Print the first fact
-  #   debug:
-  #     var: redis_master
-  
-  # - name: Configure slavery
-  #   set_fact:
-  #     slaveof: "{{ hostvars[inventory_hostname]['master'] }} 6379"
-  #   when: hostvars[inventory_hostname]['master'] == "redis_replica"
+- name: Configure slavery
+  set_fact:
+    slaveof: "{{ hostvars[groups['redis_master'][0]]['ansible_default_ipv4']['address'] }} {{ hostvars[groups['redis_master'][0]]['port'] }}"
+  when: inventory_hostname != "master"
 
-  # - name: Print the second fact
-  #   debug:
-  #     var: slaveof
+- name: Show slaveof variable.
+  debug:
+    var: slaveof
 
 - name: Create redis config file.
   template:

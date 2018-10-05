@@ -9,7 +9,7 @@
   tags:
     - common
 
-# Configure Redis key-value storage for Spring Session.
+# Configure Redis key-value storage.
 - hosts: redis_master
   roles:
     - role: redis
@@ -22,15 +22,14 @@
   tags:
     - redis
 
-- hosts: redis_replica
+- hosts: redis_slave
   roles:
     - role: redis
-      slaveof: "{{ hostvars[inventory_hostname]['master'] }} 6379"
       sentinel:
         enabled: yes
         master:
           ip: "{{ hostvars[inventory_hostname]['master'] }}"
-          port: "{{ hostvars[groups['redis'][0]]['port'] }}"
+          port: "{{ hostvars[groups['redis_master'][0]]['port'] }}"
         quorum: 2
   tags:
     - redis
