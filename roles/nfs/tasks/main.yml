@@ -1,0 +1,45 @@
+---
+- name: Install NFS utilities.
+  apt:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - nfs-common
+    - nfs-kernel-server
+  become: yes
+
+- name: Ensure directories to export exist
+  file:
+    path: "{{ item.strip().split()[0] }}"
+    state: directory
+    owner: nobody
+    group: nogroup
+  with_items: "{{ nfs_exports }}"
+  notify: restart nfs
+  become: yes
+
+- name: Copy exports file.
+  template:
+    src: exports.j2
+    dest: "{{ nfs_conf_file_location }}"
+    owner: nobody
+    group: nogroup
+    mode: 0644
+  register: nfs_exports_copy
+  notify: restart nfs
+  become: yes
+
+- name: Restart NFS immediately if exports are updated.
+  service:
+    name: "{{ nfs_server_daemon }}"
+    state: restarted
+  when: nfs_exports_copy.changed
+  become: yes
+
+- name: Start NFS at boot.
+  service:
+    name: "{{ nfs_server_daemon }}"
+    state: started
+    enabled: yes
+  when: nfs_exports|length
+  become: yes

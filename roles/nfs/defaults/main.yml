@@ -1,0 +1,6 @@
+---
+nfs_exports: {
+  "/alarms *(rw,sync,no_subtree_check,all_squash)",
+  "/photos *(rw,sync,no_subtree_check,all_squash)",
+  "/reports *(rw,sync,no_subtree_check,all_squash)"
+  }

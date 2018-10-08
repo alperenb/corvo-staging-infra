@@ -35,15 +35,14 @@
     - redis
 
 - hosts: rabbitmq
-  # tasks:
-  #   - name: Test rabbit
-  #     debug:
-  #       msg: Hello slave!
-  #     when: inventory_hostname in groups.rabbitmq_slave
-  #   - name: Get master address
-  #     debug:
-  #       var: hostvars[groups['rabbitmq_master'][0]]['hostname']
   roles:
     - rabbitmq
   tags:
     - rabbitmq
+
+# Create an NFS host
+- hosts: nfs_server
+  roles:
+    - nfs
+  tags:
+    - nfs_server
