@@ -1,0 +1,68 @@
+- name: Testing RabbitMQ clustering configuration.
+  debug:
+    var: clustering
+
+- name: Prepare hosts file
+  lineinfile: 
+    dest: /etc/hosts
+    regexp: "{{ hostvars[item].ansible_default_ipv4.address }} {{ hostvars[item]['hostname'] }}"
+    line: "{{ hostvars[item].ansible_default_ipv4.address }} {{ hostvars[item]['hostname'] }}"
+    state: present
+  become: yes
+  when: clustering is defined
+  with_items: "{{ ansible_play_hosts }}"
+
+- name: Set hostname
+  hostname:
+    name: "{{ hostvars[inventory_hostname]['hostname'] }}"
+  when: clustering is defined
+  become: yes
+
+- name: Stop the service.
+  service:
+    name: "{{ rabbitmq_daemon }}"
+    state: stopped
+  become: yes
+
+- name: Copy erlang cookie.
+  template:
+    src: .erlang.cookie.j2
+    dest: /var/lib/rabbitmq/.erlang.cookie
+    owner: rabbitmq
+    group: rabbitmq
+    mode: 0600
+  become: yes
+
+- name: Start the service.
+  service:
+    name: "{{ rabbitmq_daemon }}"
+    state: started
+  become: yes
+
+- debug: var=inventory_hostname
+
+- name: debug X
+  debug:
+    msg: "Hello {{ inventory_hostname }}"
+  when: inventory_hostname in groups.rabbitmq_slave
+
+- name: Stop rabbitmq app
+  shell: rabbitmqctl stop_app
+  become: yes
+  when: inventory_hostname in groups.rabbitmq_slave
+
+- name: "Add this node-> {{ inventory_hostname }} to cluster rabbit@{{ hostvars[groups['rabbitmq_master'][0]]['hostname'] }}"
+  shell: rabbitmqctl join_cluster "rabbit@{{ hostvars[groups['rabbitmq_master'][0]]['hostname'] }}"
+  register: join_cluster_output
+  ignore_errors: yes
+  when: inventory_hostname in groups.rabbitmq_slave
+  become: yes
+
+- name: start rabbitmq app
+  shell: rabbitmqctl start_app
+  become: yes
+  when: inventory_hostname in groups.rabbitmq_slave
+
+- name: Add HA Policy
+  shell: rabbitmqctl set_policy {{ clustering.ha.name }} "{{ clustering.ha.queue.pattern }}" '{"ha-mode":"{{ clustering.ha.mode }}"}'
+  become: yes
