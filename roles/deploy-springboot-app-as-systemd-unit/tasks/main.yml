@@ -1,0 +1,60 @@
+---
+- name: ({{ application_name }}) Check if {{ app_group }} exists
+  action: shell /usr/bin/getent passwd "{{ app_group }}" | /usr/bin/wc -l | tr -d ' '
+  register: group_exist
+
+- name: ({{ application_name }}) Create {{ app_group }} group 
+  group:
+    name: "{{ app_group }}"
+    state: present
+  when: group_exist.stdout != 0
+  become: yes
+
+- name: ({{ application_name }}) create {{ app_user }} user
+  user:
+    name: "{{ app_user }}"
+    group: "{{ app_group }}"
+    state: present
+  become: yes
+
+- name: ({{ application_name }}) create {{ deployment_folder }} folder if it doesn't exist.
+  file:
+    path: "{{ deployment_folder }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  become: yes
+
+- name: ({{ application_name }}) copy {{ executable_jar_name }}
+  copy:
+    src: "{{ executable_jar_name }}"
+    dest: "{{ deployment_folder }}/{{ application_name }}.jar"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "u+x"
+  become: yes
+  notify:
+    - restart application
+
+- name: ({{ application_name }}) copy {{ profile_file }}
+  template:
+    src: "{{ profile_file }}"
+    dest: "{{ deployment_folder }}/application-{{ active_profile_name }}.yml"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  become: yes
+  notify:
+    - restart application
+
+- name: Install {{ application_name }} as service
+  include_tasks: systemd-service.yml
+
+# TODO: Try it. 
+# - name: "wait for application to come up"
+#   uri:
+#     url: "http://127.0.0.1:{{spring_boot_http_port}}/"
+#     status_code: '200,404'
+#   register: result
+#   until: (result.status == 200) or (result.status == 404)
+#   retries: 60
+# delay: 10

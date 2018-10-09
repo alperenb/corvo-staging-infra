@@ -1,0 +1,6 @@
+---
+executable_jar_name:
+deployment_folder: /opt/{{ application_name }}
+springboot_configuration_template: "{{ application_name }}.conf"
+process_restart_mode: always
+process_restart_delay: 30

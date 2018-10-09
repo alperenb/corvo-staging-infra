@@ -1,0 +1,19 @@
+---
+- name: ({{ application_name }}) ensure systemd system directory is present
+  file:
+    path: "{{ systemd_user_services_folder }}"
+    state: directory
+    owner: root
+    group: root
+  become: yes
+
+- name: ({{ application_name }}) create {{ systemd_script }} file
+  template:
+    src: app.service.j2
+    dest: "{{ systemd_script }}"
+    mode: 0644
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  become: yes
+  notify: restart application
+  changed_when: true

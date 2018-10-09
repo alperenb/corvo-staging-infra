@@ -1,0 +1,35 @@
+#jinja2: trim_blocks:False
+server:
+  port: {{ hostvars[inventory_hostname]['port'] }}
+spring:
+  datasource:
+    initialize: true
+    url: jdbc:jtds:sqlserver://{{ DATABASE_HOST }}:{{ DATABASE_PORT }}/{{ DATABASE_NAME }}
+    username: {{ DATABASE_USER }}
+    password: {{ DATABASE_PASSWORD }}
+  redis:
+    cluster:
+      nodes: {% for host in groups['redis'] -%} {{hostvars[host]['ansible_default_ipv4']['address']}}:{{hostvars[host]['port']}}{% if not loop.last %},{% endif %} {%- endfor %}
+    sentinel: 
+      master: {{ hostvars[groups['redis'][0]]['sentinel_master'] }}
+      nodes: {% for host in groups['redis'] -%} {{hostvars[host]['ansible_default_ipv4']['address']}}:{{hostvars[host]['sentinel_port']}}{% if not loop.last %},{% endif %} {%- endfor %}
+    port: {{ hostvars[groups['redis'][0]]['port'] }}
+  rabbitmq:
+    host: {{ RABBITMQ_CLUSTER_VIRTUAL_IP }}
+    port: {{ hostvars[groups['rabbitmq'][0]]['port'] }}
+
+seagull:
+  endpoint: {{ SEAGULL_SERVER_ADDRESS }}
+  callback:
+    endpoints: {{ SEAGULL_CALLBACK_LISTENER_SERVER_ADDRESS }}
+  db: {{ SEAGULL_ACTIVE_DB }}
+photos:
+  location: {{ PHOTOS_LOCATION }}
+reports:
+  location: {{ REPORTS_LOCATION }}
+
+eureka:
+  client:
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://{{ EUREKA_HOST }}:{{ EUREKA_PORT }}/eureka/

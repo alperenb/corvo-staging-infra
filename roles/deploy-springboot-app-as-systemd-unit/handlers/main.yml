@@ -1,0 +1,11 @@
+---
+- name: restart application
+  systemd:
+    name: "{{ application_name }}@{{ instance }}"
+    enabled: yes
+    daemon-reload: yes
+    state: restarted
+  with_items: "{{ instances }}"
+  loop_control:
+    loop_var: instance
+  become: yes

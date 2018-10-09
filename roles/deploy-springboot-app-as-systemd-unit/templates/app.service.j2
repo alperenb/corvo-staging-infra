@@ -1,0 +1,12 @@
+[Unit]
+Description={{ application_name }} on port %i
+After=syslog.target
+
+[Service]
+User={{ app_user }}
+ExecStart={{ deployment_folder }}/{{ application_name }}.jar --spring.profiles.active={{ active_profile_name }}  --server.port=%i
+Restart={{ process_restart_mode }}
+RestartSec={{ process_restart_delay }}
+
+[Install]
+WantedBy=multi-user.target
