@@ -89,10 +89,10 @@
       mappings:
         - name: photos
           source: "/photos"
-          local_path: "/photos"
+          local_path: "{{ hostvars[inventory_hostname]['photos_location'] }}"
         - name: reports
           source: "/reports"
-          local_path: "/reports"
+          local_path: "{{ hostvars[inventory_hostname]['reports_location'] }}"
     - role: java8-oracle
     - role: deploy-springboot-app-as-systemd-unit
       application_name: restapi
@@ -101,19 +101,9 @@
       app_group: corvus
       active_profile_name: staging
       profile_file: templates/restapi-staging.yml.j2
-      SERVER_PORT: 8090
-      DATABASE_HOST: 192.168.1.38
-      DATABASE_PORT: 1433
-      DATABASE_NAME: corvo_new_staging
-      DATABASE_USER: sa
-      DATABASE_PASSWORD: Neva1515
       SEAGULL_SERVER_ADDRESS:
       SEAGULL_CALLBACK_LISTENER_SERVER_ADDRESS:
       SEAGULL_ACTIVE_DB:
-      PHOTOS_LOCATION: "/photos"
-      REPORTS_LOCATION: "/reports"
-      RABBITMQ_CLUSTER_VIRTUAL_IP: "192.168.1.131"
-      RABBITMQ_PORT: 5672
       EUREKA_HOST:
       EUREKA_PORT: 
       instances:

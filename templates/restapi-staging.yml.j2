@@ -4,9 +4,9 @@ server:
 spring:
   datasource:
     initialize: true
-    url: jdbc:jtds:sqlserver://{{ DATABASE_HOST }}:{{ DATABASE_PORT }}/{{ DATABASE_NAME }}
-    username: {{ DATABASE_USER }}
-    password: {{ DATABASE_PASSWORD }}
+    url: jdbc:jtds:sqlserver://{{ hostvars[inventory_hostname]['database_host'] }}:{{ hostvars[inventory_hostname]['database_port'] }}/{{ hostvars[inventory_hostname]['database_name'] }}
+    username: {{ hostvars[inventory_hostname]['database_username'] }}
+    password: {{ hostvars[inventory_hostname]['database_userpass'] }}
   redis:
     cluster:
       nodes: {% for host in groups['redis'] -%} {{hostvars[host]['ansible_default_ipv4']['address']}}:{{hostvars[host]['port']}}{% if not loop.last %},{% endif %} {%- endfor %}
@@ -15,7 +15,7 @@ spring:
       nodes: {% for host in groups['redis'] -%} {{hostvars[host]['ansible_default_ipv4']['address']}}:{{hostvars[host]['sentinel_port']}}{% if not loop.last %},{% endif %} {%- endfor %}
     port: {{ hostvars[groups['redis'][0]]['port'] }}
   rabbitmq:
-    host: {{ RABBITMQ_CLUSTER_VIRTUAL_IP }}
+    host: {{ hostvars[groups['rabbitmq'][0]]['virtual_ip'] }}
     port: {{ hostvars[groups['rabbitmq'][0]]['port'] }}
 
 seagull:
@@ -24,9 +24,9 @@ seagull:
     endpoints: {{ SEAGULL_CALLBACK_LISTENER_SERVER_ADDRESS }}
   db: {{ SEAGULL_ACTIVE_DB }}
 photos:
-  location: {{ PHOTOS_LOCATION }}
+  location: {{ hostvars[inventory_hostname]['photos_location'] }}
 reports:
-  location: {{ REPORTS_LOCATION }}
+  location: {{ hostvars[inventory_hostname]['reports_location'] }}
 
 eureka:
   client:
