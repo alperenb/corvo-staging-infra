@@ -1,0 +1,4 @@
+---
+# tasks file for keepalived
+- include_tasks: install-keepalived.yml
+- include_tasks: configure-keepalived.yml

@@ -1,0 +1,15 @@
+- name: Ensures {{ config_path }} directory exists
+  file:
+    path: "{{ config_path }}"
+    state: directory
+  become: yes
+- name: Configuring {{ inventory_hostname }}
+  template:
+    src: keepalived.config.j2
+    dest: "{{ config_file }}"
+    owner: root
+    group: "{{ root_group }}"
+    mode: 0644
+  become: yes
+  notify:
+  - reload keepalived

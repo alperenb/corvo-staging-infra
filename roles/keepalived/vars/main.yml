@@ -1,0 +1,3 @@
+---
+# virtual_ip must be set by Playbook!
+virtual_ip:

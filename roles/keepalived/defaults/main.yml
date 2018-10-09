@@ -1,0 +1,15 @@
+---
+# defaults file for keepalived
+version: 1.2.19
+config_path: /etc/keepalived
+config_file: /etc/keepalived/keepalived.conf
+state: "{{ hostvars[inventory_hostname]['state'] }}"
+priority: "{{ hostvars[inventory_hostname]['priority'] }}"
+primary:
+  private_ip: "{{ hostvars[inventory_hostname].ansible_default_ipv4.address }}"
+secondary:
+  private_ip: "{{ hostvars[inventory_hostname]['pair'] }}"
+authentication:
+  shared_secret: Neva1516
+up_start_script_path: /etc/systemd/system/keepalived.service
+root_group: root

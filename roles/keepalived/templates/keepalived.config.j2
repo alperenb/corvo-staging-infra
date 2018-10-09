@@ -1,0 +1,29 @@
+vrrp_script chk_pid {
+    script "pidof {{ pid }}"
+    interval 2
+}
+
+vrrp_instance VI_1 {
+    interface {{network_interface_name}}
+    state {{state}}
+    priority {{priority}}
+
+    virtual_router_id 33
+    unicast_src_ip {{primary.private_ip}}
+    unicast_peer {
+        {{secondary.private_ip}}
+    }
+
+    virtual_ipaddress {
+        {{virtual_ip}}
+    }
+
+    authentication {
+        auth_type PASS
+        auth_pass {{authentication.shared_secret}}
+    }
+
+    track_script {
+        chk_pid
+    }
+}

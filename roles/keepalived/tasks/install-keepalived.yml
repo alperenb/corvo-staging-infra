@@ -1,0 +1,46 @@
+- name: Install keepalived pre-requisities via apt-get
+  apt: 
+    name: "{{ item }}"
+  with_items:
+    - build-essential
+    - libssl-dev
+  become: yes
+# Keepalived | Installing keepalived
+- name: Download the latest version of keepalived
+  get_url:
+    url   : "http://www.keepalived.org/software/keepalived-{{ version }}.tar.gz"
+    dest  : "/tmp/keepalived-{{ version }}"
+- name: Unarchive the downloaded tar file
+  unarchive:
+    src: "/tmp/keepalived-{{ version }}"
+    dest: /usr/src/
+    remote_src: yes
+  become: yes
+- name: Build and install the daemon.
+  shell: "{{ item }}"
+  args:
+    chdir: "/usr/src/keepalived-{{ version }}"
+  with_items:
+    - ./configure
+    - make
+    - make install
+  become: yes
+  notify:
+  - start keepalived
+- name: Create a Keepalived Upstart Script  
+  copy:
+    src: etc/systemd/keepalived.service
+    dest: "{{ up_start_script_path }}"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+  - reload keepalived
+  become: yes
+
+- name: Ensure keepalived is started and enabled to start at boot.
+  service: 
+    name: keepalived
+    state: started
+    enabled: yes
+  become: yes

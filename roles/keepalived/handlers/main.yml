@@ -1,0 +1,12 @@
+---
+# handlers file for keepalived
+- name: reload keepalived
+  systemd:
+    name: keepalived
+    state: reloaded
+  become: yes
+- name: start keepalived
+  systemd:
+    name: keepalived
+    state: started
+  become: yes  
