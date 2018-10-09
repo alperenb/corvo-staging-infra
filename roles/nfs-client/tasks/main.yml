@@ -1,0 +1,40 @@
+---
+- name: Installing nfs-common for mounting operations.
+  apt:
+    name: nfs-common
+  become: yes
+
+- name: Debug mappings
+  debug:
+    msg: "{{ item }}"
+  with_items: "{{ mappings }}"
+
+- block:
+  - name: Checking folders
+    stat:
+      path: "{{ item }}"
+    register: folder_stats
+    with_items: "{{ mappings }}"
+  - name: Print directory check result
+    debug:
+      msg: "Result => {{ folder_stats.results }}"
+  - name: Creating a directory to be mapped with NFS.
+    file:
+      path: "{{ item.item.local_path }}"
+      state: directory
+    when: item.stat.exists == false
+    with_items:
+      - "{{folder_stats.results}}"
+    become: yes
+  - name: "Creating a mapped drive."
+    mount:
+      path: "{{ item.item.local_path }}"
+      src: "{{ hostvars[groups['nfs_server'][0]].ansible_default_ipv4.address}}:{{ item.item.source }}"
+      fstype: nfs
+      dump: 0
+      passno: 2
+      boot: yes
+      state: mounted
+    with_items:
+      - "{{folder_stats.results}}"
+    become: yes

@@ -66,6 +66,14 @@
       virtual_ip: "{{ hostvars[groups['nginx'][0]]['virtual_ip'] }}"
       network_interface_name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['interface'] }}"
       pid: nginx
+    - role: nfs-client
+      mappings:
+        - name: photos
+          source: "/photos"
+          local_path: "{{ root_folder }}/photos"
+        - name: reports
+          source: "/reports"
+          local_path: "{{ root_folder }}/reports"
   tasks:
     - include_tasks: deploy-to-nginx.yml
   tags:
