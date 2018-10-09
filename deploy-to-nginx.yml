@@ -1,0 +1,17 @@
+---
+- name: Copy Corvo static files to the web servers
+  copy:
+    src: corvo-bundle.tar.gz
+    dest: "/tmp/corvo-bundle.tar.gz"
+    owner: "{{ __nginx_user }}"
+    group: "{{ root_group }}"
+  become: yes
+  notify: restart nginx
+- debug: msg="NGinx root path => {{ root_folder }}"
+- name: Unarchive the Corvo artifacts
+  unarchive:
+    src: "/tmp/corvo-bundle.tar.gz"
+    dest: "{{ root_folder }}"
+    remote_src: yes
+  become: yes
+  notify: restart nginx
