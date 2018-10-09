@@ -1,0 +1,104 @@
+error_log {{error_log}};
+pid {{pidfile}};
+
+{% block worker %}
+worker_processes  {{ worker_processes }};
+{% endblock %}
+
+{% block events %}
+events {
+    worker_connections  {{ worker_connections }};
+}
+{% endblock %}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+
+    # The keepalive_timeout assigns the timeout for keep-alive connections with the client
+    keepalive_timeout  {{ keepalive_timeout }};
+
+    gzip on;
+
+    # Client header buffer size.
+    client_header_buffer_size {{ client_header_buffer_size }};
+
+    # The maximum allowed size for a client request.
+    # If the maximum size is exceeded, then Nginx will spit out a 413 error or Request Entity Too Large.
+    client_max_body_size {{ client_max_body_size }};
+
+    # This handles the client buffer size, meaning any POST actions sent to Nginx.
+    client_body_buffer_size 100M;
+
+    server_names_hash_bucket_size {{ server_names_hash_bucket_size }};
+
+    log_format main '$http_x_forwarded_for - $remote_user [$time_local] ' '"$request" $status $body_bytes_sent "$http_referer" ' '"$http_user_agent"' ;
+
+
+    {% block http_upstream %}
+    {% for upstream in upstreams %}
+        upstream {{ upstream.name }} {
+        {% if upstream.strategy is defined %}
+            {{ upstream.strategy }};
+        {% endif %}
+        {% for host in upstream.servers %}
+            server {{ host }};
+        {% endfor %}
+        
+        }
+    {% endfor %}
+    {% endblock %}
+
+    server {
+        listen       {{ server_port }};
+        server_name  {{ server_ip }};
+
+        location / {
+
+            root {{ root_folder }};
+            index  index.html index.htm;
+
+            proxy_set_header X-Forwarded-For $remote_addr;
+
+            if ($request_filename ~* ^.?/([^/]?)$) {
+                set $filename $1;
+            }
+
+            if ($filename ~* ^.*?\.(eot)|(ttf)|(woff)$){
+                add_header Access-Control-Allow-Origin *;
+            }
+        }
+
+        #error_page  404              /404.html;
+
+        # redirect server error pages to the static page /50x.html
+        #
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+
+        location ^~ /REST_API {
+            proxy_pass http://REST_API;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_buffer_size   128k;
+            proxy_buffers   4 256k;
+            proxy_busy_buffers_size   256k;
+            proxy_read_timeout  900s;
+
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+
+        location ^~ /LYREBIRD_WS {
+            proxy_pass http://LYREBIRD_WS;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+    }
+}
+include servers/*;

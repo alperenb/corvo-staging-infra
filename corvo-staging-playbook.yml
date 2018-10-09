@@ -9,7 +9,7 @@
   tags:
     - common
 
-# Configure Redis key-value storage.
+# Configure Redis Cluster.
 - hosts: redis_master
   roles:
     - role: redis
@@ -34,6 +34,7 @@
   tags:
     - redis
 
+# RabbitMQ Cluster
 - hosts: rabbitmq
   roles:
     - rabbitmq
@@ -46,3 +47,21 @@
     - nfs
   tags:
     - nfs_server
+
+
+# Configure NGinx load balancers with active/passive configuration via keepalived.
+- hosts: nginx
+  roles:
+    - role: nginx
+      upstreams:
+        - name: REST_API
+          servers:
+            - "{{ hostvars[groups['restapi'][0]]['ansible_host'] }}:{{ hostvars[groups['restapi'][0]]['port'] }}"
+            - "{{ hostvars[groups['restapi'][1]]['ansible_host'] }}:{{ hostvars[groups['restapi'][1]]['port'] }}"
+        - name: LYREBIRD_WS
+          servers:
+            - "{{ hostvars[groups['lyrebird'][0]]['ansible_host'] }}:{{ hostvars[groups['lyrebird'][0]]['port'] }}"
+            - "{{ hostvars[groups['lyrebird'][1]]['ansible_host'] }}:{{ hostvars[groups['lyrebird'][1]]['port'] }}"
+  tags:
+    - nginx
+    - jsclient

@@ -1,0 +1,10 @@
+---
+server_ip: "{{ hostvars[inventory_hostname].ansible_default_ipv4.address }}"
+root_group: root
+conf_path: /etc/nginx/conf.d
+conf_file_path: /etc/nginx/nginx.conf
+mime_file_path: /etc/nginx/mime.types
+pidfile: /run/nginx.pid
+vhost_path: /etc/nginx/sites-enabled
+default_vhost_path: /etc/nginx/sites-enabled/default
+__nginx_user: "www-data"
