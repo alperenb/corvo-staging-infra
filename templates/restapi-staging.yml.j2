@@ -21,7 +21,7 @@ spring:
 seagull:
   endpoint: {{ SEAGULL_SERVER_ADDRESS }}
   callback:
-    endpoints: {{ SEAGULL_CALLBACK_LISTENER_SERVER_ADDRESS }}
+    endpoints: ws://{{ hostvars[groups['haproxy'][0]]['virtual_ip'] }}:3015
   db: {{ SEAGULL_ACTIVE_DB }}
 photos:
   location: {{ hostvars[inventory_hostname]['photos_location'] }}

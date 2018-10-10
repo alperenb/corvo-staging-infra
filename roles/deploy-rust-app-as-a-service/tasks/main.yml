@@ -1,0 +1,98 @@
+---
+- name: Create group for application.
+  group:
+    name: "{{ app_group }}"
+    state: present
+  become: yes
+
+- name: Create user for application.
+  user:
+    name: "{{ app_user }}"
+    group: "{{ app_group }}"
+    state: present
+  become: yes
+
+- name: Create source folder if not exists
+  file:
+    path: "{{ source_folder }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  become: yes  
+
+- name: Create deploy folder if not exists
+  file:
+    path: "{{ deployment_folder }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  become: yes
+
+- name: Copy application source.
+  copy:
+    src: "{{ source_tar_filename }}"
+    dest: "/tmp/{{ application_name }}.tar.gz"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  become: yes
+
+- name: Unarchive tar file.
+  unarchive:
+    src: "/tmp/{{ application_name }}.tar.gz"
+    dest: "{{ source_folder }}"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    remote_src: yes
+  become: yes
+
+- name: Build source
+  command: cargo build --release
+  args:
+    chdir: "{{ source_folder }}/{{ application_name }}"
+  environment:
+    PATH: "/home/{{ app_user }}/.cargo/bin:{{ ansible_env['PATH'] }}" # change os username here
+  notify:
+    - restart application 
+
+- name: Create config directory
+  file:
+    path: "{{ deployment_folder }}/config"
+    state: directory
+    mode: 0755
+
+- name: Copy config file.
+  copy:
+    src: "{{ source_folder }}/{{ application_name }}/config/default.toml"
+    dest: "{{ deployment_folder }}/config/default.toml"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    remote_src: yes
+  notify:
+    - restart application
+  become: yes
+
+- name: Copy log4rs file.
+  copy:
+    src: "{{ source_folder }}/{{ application_name }}/log4rs.yaml"
+    dest: "{{ deployment_folder }}/log4rs.yaml"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    remote_src: yes
+  notify:
+    - restart application
+  become: yes
+
+- name: Copy executables.
+  copy:
+    src: "{{ source_folder }}/{{ application_name }}/target/release/{{ application_name }}"
+    dest: "{{ deployment_folder }}/{{ application_name }}"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "u+x"
+    remote_src: yes
+  become: yes
+  notify:
+    - restart application
+
+- name: Install as service
+  include_tasks: systemd-service.yml

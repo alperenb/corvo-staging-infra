@@ -1,0 +1,8 @@
+---
+- name: restart application
+  systemd:
+    name: "{{ application_name }}"
+    enabled: yes
+    daemon-reload: yes
+    state: restarted
+  become: yes

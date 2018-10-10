@@ -1,0 +1,26 @@
+---
+- name: "Check if Rust already installed"
+  command: "/home/ubuntu-template/.cargo/bin/rustc --version"
+  changed_when: false
+  failed_when: false
+  register: rustc_version
+
+# - name: "Print variable"
+#   debug:
+#     msg: "rustc_version is {{ rustc_version }}"
+
+- name: "Install dependencies"
+  apt:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - curl
+    - gcc
+  become: yes
+  when: rustc_version.rc != 0
+
+- name: Install Rust via rustup
+  shell: curl https://sh.rustup.rs -sSf | sh -s -- -y 
+  when: rustc_version.rc != 0
+  notify:
+  - set rustc_version

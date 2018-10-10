@@ -1,0 +1,2 @@
+systemd_user_services_folder: /usr/lib/systemd/system
+systemd_script: "{{ systemd_user_services_folder }}/{{ application_name }}.service"

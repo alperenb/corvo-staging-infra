@@ -1,0 +1,19 @@
+---
+- name: Ensure systemd system directory is present (for Ubuntu)
+  file:
+    path: "{{ systemd_user_services_folder }}"
+    state: directory
+    owner: root
+    group: root
+  become: yes
+
+- name: Create systemd service file
+  template:
+    src: seagull_cb_listener.service.j2
+    dest: "{{ systemd_script }}"
+    mode: 0644
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  become: yes
+  notify:
+    - restart application

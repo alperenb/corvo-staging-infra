@@ -170,9 +170,8 @@
       app_group: corvus
       active_profile_name: staging
       profile_file: templates/restapi-staging.yml.j2
-      SEAGULL_SERVER_ADDRESS:
-      SEAGULL_CALLBACK_LISTENER_SERVER_ADDRESS:
-      SEAGULL_ACTIVE_DB:
+      SEAGULL_SERVER_ADDRESS: ws://192.168.1.117:9002/seagull
+      SEAGULL_ACTIVE_DB: default
       instances:
         - "{{ hostvars[inventory_hostname]['port'] }}"
   tags:
@@ -190,3 +189,11 @@
       pid: haproxy
   tags:
     - haproxy
+
+- hosts: seagull_taskqueue_listener
+  roles:
+    - rust
+    - role: deploy-rust-app-as-a-service
+      source_tar_filename: files/seagull-task-queue-listener.tar.gz
+  tags:
+    - rust

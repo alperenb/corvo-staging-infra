@@ -1,0 +1,9 @@
+---
+source_tar_filename:
+app_user: ubuntu-template
+app_group: ubuntu-template
+application_name: seagull-task-queue-listener
+source_folder: /usr/src
+deployment_folder: /opt/{{ application_name }}
+process_restart_mode: always
+process_restart_delay: 5

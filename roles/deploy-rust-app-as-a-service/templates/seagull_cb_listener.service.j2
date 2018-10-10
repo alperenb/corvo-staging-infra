@@ -1,0 +1,14 @@
+[Unit]
+Description={{ application_name }}
+After=syslog.target
+
+[Service]
+User={{ app_user }}
+WorkingDirectory={{ deployment_folder }}
+ExecStart="{{ deployment_folder }}/{{ application_name }}"
+Restart={{ process_restart_mode }}
+RestartSec={{ process_restart_delay }}
+
+
+[Install]
+WantedBy=multi-user.target

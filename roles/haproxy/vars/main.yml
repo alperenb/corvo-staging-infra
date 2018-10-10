@@ -2,3 +2,4 @@ rabbitmq_balance: roundrobin
 rabbitmq_stomp_binding_port: 61613
 rabbitmq_stomp_balance: roundrobin
 http_binding_port: 3015
+seagull_listener_balance: roundrobin
