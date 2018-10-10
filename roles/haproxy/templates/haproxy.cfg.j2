@@ -1,0 +1,103 @@
+global
+  maxconn 2000
+  pidfile /var/run/haproxy.pid
+  log     127.0.0.1 local0
+  log     127.0.0.1 local1 notice
+defaults
+  mode http
+  log global
+  option  httplog
+  option  http-server-close
+  option  dontlognull
+  option  redispatch
+  option  contstats
+  retries 3
+  backlog 10000
+  timeout client          25s
+  timeout connect          5s
+  timeout server          25s
+# timeout tunnel available in ALOHA 5.5 or HAProxy 1.5-dev10 and higher
+  timeout tunnel        3600s
+  timeout http-keep-alive  1s
+  timeout http-request    15s
+  timeout queue           30s
+  timeout tarpit          60s
+  default-server inter 3s rise 2 fall 3
+  option forwardfor
+
+
+frontend http_in
+  bind *:{{ http_binding_port }} name http
+  maxconn 60000
+## routing based on Host header
+  acl host_ws hdr_beg(Host) -i ws.
+  
+## routing based on websocket protocol header
+  acl hdr_connection_upgrade hdr(Connection)  -i upgrade
+  acl hdr_upgrade_websocket  hdr(Upgrade)     -i WebSocket
+
+  stats enable
+  stats hide-version 
+  stats realm   Haproxy\ Statistics
+  stats uri /haproxy?stats
+  stats auth nevalabsadmin:Neva1515
+
+
+
+listen rabbitmq_5672
+  bind *:{{ hostvars[groups['rabbitmq'][0]]['port'] }}
+  mode tcp
+  balance {{ rabbitmq_balance }}
+  stats enable
+  option  forwardfor
+  option  tcpka  
+  log global
+  # retries 3
+  # contimeout	5000
+  # clitimeout	0
+  # srvtimeout	0
+  # option tcplog
+  # option persist
+  # balance roundrobin
+{% for host in groups['rabbitmq'] %}
+  server {{ host }} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:{{ hostvars[host]['port'] }} check
+{% endfor %}
+
+
+listen rabbitmq_61613_STOMP
+  bind *:{{ rabbitmq_stomp_binding_port }}
+  mode tcp
+  balance {{ rabbitmq_stomp_balance }}
+  stats enable
+  option  forwardfor
+  option  tcpka  
+  log global
+  # retries 3
+  # contimeout	5000
+  # clitimeout	0
+  # srvtimeout	0
+  # option tcplog
+  # option persist
+  # balance roundrobin
+{% for host in groups['rabbitmq'] %}
+  server {{ host }} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:{{ hostvars[host]['stomp_port'] }} check
+{% endfor %}
+
+defaults redis
+  mode tcp
+  
+frontend ft_redis
+  bind *:{{ hostvars[groups['redis'][0]]['port'] }} name redis
+  default_backend bk_redis
+
+backend bk_redis
+  option tcp-check
+  tcp-check send PING\r\n
+  tcp-check expect string +PONG
+  tcp-check send info\ replication\r\n
+  tcp-check expect string role:master
+  tcp-check send QUIT\r\n
+  tcp-check expect string +OK
+{% for host in groups['redis'] %}
+  server {{ host }} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:{{ hostvars[host]['port'] }} check inter 1s
+{% endfor %}

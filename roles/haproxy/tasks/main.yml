@@ -1,0 +1,22 @@
+---
+# This role installs HAProxy and configures it.
+- name: Download and install haproxy
+  apt:
+    name: haproxy
+    state: present
+  become: yes
+
+- name: Configure the haproxy cfg file with hosts
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+  notify:
+  - restart haproxy
+  become: yes
+
+- name: Start the haproxy service
+  service:
+    name: haproxy
+    state: started
+    enabled: yes
+  become: yes

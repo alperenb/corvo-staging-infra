@@ -63,7 +63,7 @@
             - "{{ hostvars[groups['lyrebird'][0]]['ansible_host'] }}:{{ hostvars[groups['lyrebird'][0]]['port'] }}"
             - "{{ hostvars[groups['lyrebird'][1]]['ansible_host'] }}:{{ hostvars[groups['lyrebird'][1]]['port'] }}"
     - role: keepalived
-      virtual_ip: "{{ hostvars[groups['nginx'][0]]['virtual_ip'] }}"
+      virtual_ip: "{{ hostvars[inventory_hostname]['virtual_ip'] }}"
       network_interface_name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['interface'] }}"
       pid: nginx
     - role: nfs-client
@@ -123,4 +123,13 @@
 #       instances:
 #         - 7334
 
-  
+# HAProxy
+- hosts: haproxy
+  roles:
+    - haproxy
+    - role: keepalived
+      virtual_ip: "{{ hostvars[inventory_hostname]['virtual_ip'] }}"
+      network_interface_name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['interface'] }}"
+      pid: haproxy
+  tags:
+    - haproxy
