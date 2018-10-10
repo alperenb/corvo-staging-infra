@@ -10,7 +10,7 @@ The stack includes;
 5. NFS Server for sharing resources between services
 6. A Spring Boot Ansible Role for deploying Spring Boot applications as Systemd units.
 
-### Runnint the Playbook
+### Running the Playbook
 ```
 $ ansible-playbook corvo-staging-playbook.yml
 ```
