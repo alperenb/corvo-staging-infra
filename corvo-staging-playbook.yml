@@ -54,11 +54,11 @@
   roles:
     - role: nginx
       upstreams:
-        - name: REST_API
+        - name: RESTAPI
           servers:
             - "{{ hostvars[groups['restapi'][0]]['ansible_host'] }}:{{ hostvars[groups['restapi'][0]]['port'] }}"
             # - "{{ hostvars[groups['restapi'][1]]['ansible_host'] }}:{{ hostvars[groups['restapi'][1]]['port'] }}"
-        - name: LYREBIRD_WS
+        - name: LYREBIRDWS
           servers:
             - "{{ hostvars[groups['lyrebird'][0]]['ansible_host'] }}:{{ hostvars[groups['lyrebird'][0]]['port'] }}"
             # - "{{ hostvars[groups['lyrebird'][1]]['ansible_host'] }}:{{ hostvars[groups['lyrebird'][1]]['port'] }}"
