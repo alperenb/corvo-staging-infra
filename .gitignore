@@ -1,4 +1,4 @@
 *.retry
 *.jar
 .DS_Store
-.tar.gz
+*.tar.gz
