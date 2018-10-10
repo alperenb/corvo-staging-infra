@@ -1,21 +1,21 @@
 server:
-  port: {{ SERVER_PORT }}
+  port: {{ hostvars[inventory_hostname]['port'] }}
 
 spring:
   datasource:
     initialize: true
-    url: jdbc:sqlserver://{{ DATABASE_HOST }};databaseName={{ DATABASE_NAME }}
-    username: {{ DATABASE_USER }}
-    password: {{ DATABASE_PASSWORD }}
+    url: jdbc:sqlserver://{{ hostvars[inventory_hostname]['database_host'] }};databaseName={{ hostvars[inventory_hostname]['database_name'] }}
+    username: {{ hostvars[inventory_hostname]['database_username'] }}
+    password: {{ hostvars[inventory_hostname]['database_userpass'] }}
     driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
   rabbitmq:
-    host: {{ RABBITMQ_CLUSTER_VIRTUAL_IP }}
-    port: {{ RABBITMQ_PORT }}
+    host: {{ hostvars[groups['haproxy'][0]]['virtual_ip']  }}
+    port: {{ hostvars[groups['rabbitmq'][0]]['port'] }}
 
 eureka:
   client:
     registerWithEureka: true
     fetchRegistry: true
     serviceUrl:
-      defaultZone: http://{{ EUREKA_HOST }}:{{ EUREKA_PORT }}/eureka/
+      defaultZone: http://{{ hostvars[groups['corvus_registry'][0]]['ansible_default_ipv4']['address'] }}:{{ hostvars[groups['corvus_registry'][0]]['port'] }}/eureka/

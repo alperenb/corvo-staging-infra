@@ -9,13 +9,13 @@ spring:
     password: {{ hostvars[inventory_hostname]['database_userpass'] }}
   redis:
     cluster:
-      nodes: {% for host in groups['redis'] -%} {{hostvars[host]['ansible_default_ipv4']['address']}}:{{hostvars[host]['port']}}{% if not loop.last %},{% endif %} {%- endfor %}
+      nodes: {% for host in groups['redis'] -%} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:{{ hostvars[host]['port'] }}{% if not loop.last %},{% endif %} {%- endfor %}
     sentinel: 
       master: {{ hostvars[groups['redis'][0]]['sentinel_master'] }}
-      nodes: {% for host in groups['redis'] -%} {{hostvars[host]['ansible_default_ipv4']['address']}}:{{hostvars[host]['sentinel_port']}}{% if not loop.last %},{% endif %} {%- endfor %}
+      nodes: {% for host in groups['redis'] -%} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:{{ hostvars[host]['sentinel_port'] }}{% if not loop.last %},{% endif %} {%- endfor %}
     port: {{ hostvars[groups['redis'][0]]['port'] }}
   rabbitmq:
-    host: {{ hostvars[groups['rabbitmq'][0]]['virtual_ip'] }}
+    host: {{ hostvars[groups['haproxy'][0]]['virtual_ip'] }}
     port: {{ hostvars[groups['rabbitmq'][0]]['port'] }}
 
 seagull:
@@ -32,4 +32,4 @@ eureka:
   client:
     fetchRegistry: true
     serviceUrl:
-      defaultZone: http://{{ EUREKA_HOST }}:{{ EUREKA_PORT }}/eureka/
+      defaultZone: http://{{ hostvars[groups['corvus_registry'][0]]['ansible_default_ipv4']['address'] }}:{{ hostvars[groups['corvus_registry'][0]]['port'] }}/eureka/

@@ -57,11 +57,11 @@
         - name: REST_API
           servers:
             - "{{ hostvars[groups['restapi'][0]]['ansible_host'] }}:{{ hostvars[groups['restapi'][0]]['port'] }}"
-            - "{{ hostvars[groups['restapi'][1]]['ansible_host'] }}:{{ hostvars[groups['restapi'][1]]['port'] }}"
+            # - "{{ hostvars[groups['restapi'][1]]['ansible_host'] }}:{{ hostvars[groups['restapi'][1]]['port'] }}"
         - name: LYREBIRD_WS
           servers:
             - "{{ hostvars[groups['lyrebird'][0]]['ansible_host'] }}:{{ hostvars[groups['lyrebird'][0]]['port'] }}"
-            - "{{ hostvars[groups['lyrebird'][1]]['ansible_host'] }}:{{ hostvars[groups['lyrebird'][1]]['port'] }}"
+            # - "{{ hostvars[groups['lyrebird'][1]]['ansible_host'] }}:{{ hostvars[groups['lyrebird'][1]]['port'] }}"
     - role: keepalived
       virtual_ip: "{{ hostvars[inventory_hostname]['virtual_ip'] }}"
       network_interface_name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['interface'] }}"
@@ -81,6 +81,75 @@
     - jsclient
 
 # Deploy Java microservices.
+
+# Deploy Corvus-Registry
+- hosts: corvus_registry
+  roles:
+    - role: java8-oracle
+    - role: deploy-springboot-app-as-systemd-unit
+      application_name: corvus_registry
+      executable_jar_name: files/corvus-registry-0.0.1-SNAPSHOT.jar
+      app_user: corvus_registry
+      app_group: corvus
+      active_profile_name: staging
+      profile_file: templates/corvus-registry-staging.yml.j2
+      instances:
+        - "{{ hostvars[inventory_hostname]['port'] }}"
+  tags:
+    - corvus_registry
+    - eureka
+    - backend
+
+# Deploy Auditor
+- hosts: auditor
+  roles:
+    - role: java8-oracle
+    - role: deploy-springboot-app-as-systemd-unit
+      application_name: auditor
+      executable_jar_name: files/auditor-0.0.1-SNAPSHOT.jar
+      app_user: auditor
+      app_group: corvus
+      active_profile_name: staging
+      profile_file: templates/auditor-staging.yml.j2
+      instances:
+        - "{{ hostvars[inventory_hostname]['port'] }}"
+  tags:
+    - auditor
+    - backend
+
+# Deploy Lyrebird
+- hosts: lyrebird
+  roles:
+    - role: java8-oracle
+    - role: deploy-springboot-app-as-systemd-unit
+      application_name: lyrebird
+      executable_jar_name: files/lyrebird-0.0.1-SNAPSHOT.jar
+      app_user: lyrebird
+      app_group: corvus
+      active_profile_name: staging
+      profile_file: templates/lyrebird-staging.yml.j2
+      instances:
+        - "{{ hostvars[inventory_hostname]['port'] }}"
+  tags:
+    - lyrebird
+    - backend
+
+# Deploy CorvusEye
+- hosts: corvus_eye
+  roles:
+    - role: java8-oracle
+    - role: deploy-springboot-app-as-systemd-unit
+      application_name: corvus_eye
+      executable_jar_name: files/corvus-eye-0.0.1-SNAPSHOT.jar
+      app_user: corvus_eye
+      app_group: corvus
+      active_profile_name: staging
+      profile_file: templates/corvuseye-staging.yml.j2
+      instances:
+        - "{{ hostvars[inventory_hostname]['port'] }}"
+  tags:
+    - corvus_eye
+    - backend
 
 # Deploy restapi
 - hosts: restapi
@@ -104,24 +173,12 @@
       SEAGULL_SERVER_ADDRESS:
       SEAGULL_CALLBACK_LISTENER_SERVER_ADDRESS:
       SEAGULL_ACTIVE_DB:
-      EUREKA_HOST:
-      EUREKA_PORT: 
       instances:
-        - 8090
+        - "{{ hostvars[inventory_hostname]['port'] }}"
   tags:
     - restapi
-    - java
+    - backend
 
-# - hosts: lyrebird
-#   roles:
-#     - role: java8-oracle
-#     - role: deploy-springboot-app-as-systemd-unit
-#       application_name: lyrebird
-#       executable_jar_name: lyrebird-0.0.1-SNAPSHOT.jar
-#       app_user: lyrebird
-#       app_group: corvus
-#       instances:
-#         - 7334
 
 # HAProxy
 - hosts: haproxy
