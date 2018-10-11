@@ -74,6 +74,9 @@
         - name: reports
           source: "/reports"
           local_path: "{{ root_folder }}/reports"
+        - name: alarms
+          source: "/alarms"
+          local_path: "{{ root_folder }}/alarms"
   tasks:
     - include_tasks: deploy-to-nginx.yml
   tags:
